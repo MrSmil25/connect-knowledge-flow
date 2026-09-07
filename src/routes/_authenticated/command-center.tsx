@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 import { useMemo, useState } from "react";
-import { RefreshCw } from "lucide-react";
+import { Camera, RefreshCw } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -18,9 +19,13 @@ import {
   fetchActivity,
   fetchFinance,
   fetchOkr,
+  fetchAttendanceByDivision,
+  fetchOkrSnapshots,
   fetchRedFlags,
+  fetchStuckMoney,
   fetchTasks,
   periodLabel,
+  takeOkrSnapshot,
 } from "@/lib/command-center";
 import { relativeTime } from "@/lib/format";
 import {
@@ -34,6 +39,7 @@ import { AlignmentMatrix, buildMatrix } from "@/components/command-center/Alignm
 import { RedFlags } from "@/components/command-center/RedFlags";
 import { Momentum } from "@/components/command-center/Momentum";
 import { ActivityFeed } from "@/components/command-center/ActivityFeed";
+import { StuckMoney } from "@/components/command-center/StuckMoney";
 
 export const Route = createFileRoute("/_authenticated/command-center")({
   head: () => ({
@@ -101,6 +107,25 @@ function CommandCenterPage() {
     enabled: !!activePeriod,
   });
   const activityQuery = useQuery({ queryKey: ["cc-activity"], queryFn: fetchActivity });
+  const snapshotsQuery = useQuery({
+    queryKey: ["cc-snapshots", activePeriod],
+    queryFn: () => fetchOkrSnapshots(activePeriod),
+    enabled: !!activePeriod,
+  });
+  const stuckMoneyQuery = useQuery({ queryKey: ["cc-stuck-money"], queryFn: fetchStuckMoney });
+  const attendanceQuery = useQuery({
+    queryKey: ["cc-attendance"],
+    queryFn: fetchAttendanceByDivision,
+  });
+
+  const snapshotMutation = useMutation({
+    mutationFn: () => takeOkrSnapshot(activePeriod),
+    onSuccess: () => {
+      toast.success("Snapshot tersimpan. Data ini akan mengisi grafik momentum.");
+      queryClient.invalidateQueries({ queryKey: ["cc-snapshots", activePeriod] });
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
 
   const lastUpdated = Math.max(
     okrQuery.dataUpdatedAt,
@@ -112,13 +137,26 @@ function CommandCenterPage() {
 
   const matrixRows = useMemo(() => {
     if (!divisions || !okrQuery.data || !tasksQuery.data) return [];
-    const rows = buildMatrix(divisions, okrQuery.data.keyResults, tasksQuery.data);
+    const rows = buildMatrix(
+      divisions,
+      okrQuery.data.keyResults,
+      tasksQuery.data,
+      attendanceQuery.data ?? {},
+    );
     if (isOrgWide) return rows;
     if (isMemberOnly) return rows.filter((r) => r.code === myDivision);
     return [...rows].sort((a, b) =>
       a.code === myDivision ? -1 : b.code === myDivision ? 1 : 0,
     );
-  }, [divisions, okrQuery.data, tasksQuery.data, isOrgWide, isMemberOnly, myDivision]);
+  }, [
+    divisions,
+    okrQuery.data,
+    tasksQuery.data,
+    attendanceQuery.data,
+    isOrgWide,
+    isMemberOnly,
+    myDivision,
+  ]);
 
   const visibleFlags = useMemo(() => {
     const flags = flagsQuery.data ?? [];
@@ -166,11 +204,29 @@ function CommandCenterPage() {
               ))}
             </SelectContent>
           </Select>
+          {!isMemberOnly && (
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => snapshotMutation.mutate()}
+              disabled={snapshotMutation.isPending}
+            >
+              <Camera className="size-4" />
+              <span className="hidden sm:inline">
+                {snapshotMutation.isPending ? "Menyimpan..." : "📸 Simpan Snapshot Minggu Ini"}
+              </span>
+            </Button>
+          )}
           <Button variant="outline" size="sm" onClick={refreshAll} disabled={isRefreshing}>
             <RefreshCw className={`size-4 ${isRefreshing ? "animate-spin" : ""}`} />
             <span className="hidden sm:inline">Refresh</span>
           </Button>
         </div>
+        {!isMemberOnly && (
+          <p className="w-full text-xs text-muted-foreground">
+            Ambil snapshot rutin tiap minggu (misal tiap Jumat) agar grafik momentum terisi.
+          </p>
+        )}
       </header>
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -206,13 +262,19 @@ function CommandCenterPage() {
         <AlignmentMatrix rows={matrixRows} />
       )}
 
+      {stuckMoneyQuery.isLoading ? (
+        <SectionSkeleton height="h-52" />
+      ) : stuckMoneyQuery.data ? (
+        <StuckMoney data={stuckMoneyQuery.data} />
+      ) : null}
+
       {flagsQuery.isLoading ? <SectionSkeleton /> : <RedFlags flags={visibleFlags} />}
 
       <div className="grid gap-6 lg:grid-cols-2">
-        {okrQuery.isLoading ? (
+        {snapshotsQuery.isLoading ? (
           <SectionSkeleton height="h-80" />
         ) : (
-          <Momentum objectives={okrQuery.data?.objectives ?? []} />
+          <Momentum snapshots={snapshotsQuery.data ?? []} />
         )}
         {activityQuery.isLoading ? (
           <SectionSkeleton height="h-80" />

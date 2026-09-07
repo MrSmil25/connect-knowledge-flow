@@ -1,11 +1,20 @@
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import {
+  CartesianGrid,
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  Tooltip,
+  XAxis,
+  YAxis,
+} from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import type { Objective } from "@/lib/command-center";
+import type { OkrSnapshot } from "@/lib/command-center";
+import { formatDateID } from "@/lib/format";
 
-export function Momentum({ objectives }: { objectives: Objective[] }) {
-  const data = objectives.map((o) => ({
-    name: o.title.length > 18 ? `${o.title.slice(0, 18)}…` : o.title,
-    progress: Number(o.progress_percent ?? 0),
+export function Momentum({ snapshots }: { snapshots: OkrSnapshot[] }) {
+  const data = snapshots.map((s) => ({
+    date: formatDateID(s.snapshot_date),
+    progress: Number(s.objectives_avg_progress ?? 0),
   }));
 
   return (
@@ -13,19 +22,21 @@ export function Momentum({ objectives }: { objectives: Objective[] }) {
       <CardHeader>
         <CardTitle>Momentum</CardTitle>
         <CardDescription>
-          Data historis akan terkumpul seiring waktu — untuk saat ini ditampilkan snapshot progress
-          Objective periode terpilih.
+          Rata-rata progress Objective dari snapshot mingguan periode terpilih.
         </CardDescription>
       </CardHeader>
       <CardContent className="h-72">
-        {data.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Belum ada Objective pada periode ini.</p>
+        {data.length < 2 ? (
+          <p className="text-sm text-muted-foreground">
+            Grafik momentum akan muncul setelah minimal 2 snapshot mingguan terkumpul. Ambil
+            snapshot pertama dengan tombol di atas.
+          </p>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={data} margin={{ top: 8, right: 8, bottom: 40, left: 0 }}>
+            <LineChart data={data} margin={{ top: 8, right: 12, bottom: 40, left: 0 }}>
               <CartesianGrid strokeDasharray="3 3" className="stroke-border" vertical={false} />
               <XAxis
-                dataKey="name"
+                dataKey="date"
                 interval={0}
                 angle={-25}
                 textAnchor="end"
@@ -33,9 +44,15 @@ export function Momentum({ objectives }: { objectives: Objective[] }) {
                 tick={{ fontSize: 11 }}
               />
               <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} unit="%" />
-              <Tooltip formatter={(v: number) => [`${v}%`, "Progress"]} />
-              <Bar dataKey="progress" radius={[4, 4, 0, 0]} fill="var(--primary)" />
-            </BarChart>
+              <Tooltip formatter={(v: number) => [`${v}%`, "Rata-rata progress"]} />
+              <Line
+                type="monotone"
+                dataKey="progress"
+                stroke="var(--primary)"
+                strokeWidth={2}
+                dot={{ r: 3 }}
+              />
+            </LineChart>
           </ResponsiveContainer>
         )}
       </CardContent>
