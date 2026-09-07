@@ -29,6 +29,7 @@ export type MatrixRow = {
   krProgress: number;
   activeTaskCount: number;
   doneRate: number;
+  attendanceRate: number | null;
   status: AlignmentStatus;
 };
 
@@ -36,6 +37,7 @@ export function buildMatrix(
   divisions: Division[],
   keyResults: KeyResult[],
   tasks: TaskRow[],
+  attendanceByDivision: Record<string, number> = {},
 ): MatrixRow[] {
   return divisions.map((division) => {
     const krs = keyResults.filter((k) => k.owner_division === division.code);
@@ -58,6 +60,7 @@ export function buildMatrix(
       krProgress,
       activeTaskCount: divisionTasks.filter((t) => ACTIVE_TASK_STATUSES.includes(t.status)).length,
       doneRate,
+      attendanceRate: attendanceByDivision[division.code] ?? null,
       status: alignmentStatus(krs.length, divisionTasks.length, krProgress, doneRate),
     };
   });
@@ -84,13 +87,14 @@ export function AlignmentMatrix({ rows }: { rows: MatrixRow[] }) {
                 <th className="py-2 pr-3 font-medium">Avg Progress KR</th>
                 <th className="py-2 pr-3 font-medium">Task Aktif</th>
                 <th className="py-2 pr-3 font-medium">Task Done Rate</th>
+                <th className="py-2 pr-3 font-medium">Kehadiran Rapat</th>
                 <th className="py-2 font-medium">Status Alignment</th>
               </tr>
             </thead>
             <tbody>
               {rows.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="py-6 text-center text-muted-foreground">
+                  <td colSpan={7} className="py-6 text-center text-muted-foreground">
                     Belum ada data divisi.
                   </td>
                 </tr>
@@ -139,6 +143,13 @@ export function AlignmentMatrix({ rows }: { rows: MatrixRow[] }) {
                           </span>
                         </div>
                       </td>
+                      <td className="py-3 pr-3 tabular-nums">
+                        {row.attendanceRate === null ? (
+                          <span className="text-muted-foreground">-</span>
+                        ) : (
+                          `${row.attendanceRate}%`
+                        )}
+                      </td>
                       <td className="py-3">
                         <span
                           className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium ${meta.className}`}
@@ -149,7 +160,7 @@ export function AlignmentMatrix({ rows }: { rows: MatrixRow[] }) {
                     </tr>
                     {isOpen && (
                       <tr key={`${row.code}-detail`} className="border-b bg-muted/40">
-                        <td colSpan={6} className="p-4">
+                        <td colSpan={7} className="p-4">
                           <div className="grid gap-6 md:grid-cols-2">
                             <div>
                               <p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">
