@@ -227,9 +227,11 @@ export async function fetchAttendanceRecap(): Promise<AttendanceRecap[]> {
       map.set(row.member_id, rec);
     }
     rec.invited += 1;
-    if (row.status in rec) {
-      (rec as unknown as Record<string, number>)[row.status] += 1;
+    const key = row.status as AttendanceStatus;
+    if (ATTENDANCE_STATUSES.includes(key)) {
+      rec[key] += 1;
     }
+
   }
   const list = [...map.values()];
   for (const rec of list) {
