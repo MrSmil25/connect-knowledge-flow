@@ -470,3 +470,102 @@ export const ALIGNMENT_META: Record<
     explanation: "Belum ada Key Result atau task tercatat untuk divisi ini.",
   },
 };
+
+/* ---------------------------------------------------------------------------
+ * Snapshot OKR (tabel okr_snapshots + rpc take_okr_snapshot)
+ * ------------------------------------------------------------------------- */
+
+export type OkrSnapshot = {
+  id: string;
+  snapshot_date: string;
+  period: string;
+  objectives_avg_progress: number | null;
+  objectives_total: number | null;
+  objectives_on_track: number | null;
+  objectives_at_risk: number | null;
+  objectives_off_track: number | null;
+  objectives_achieved: number | null;
+};
+
+export async function fetchOkrSnapshots(period: string, limit = 12): Promise<OkrSnapshot[]> {
+  const { data, error } = await db
+    .from("okr_snapshots")
+    .select(
+      "id,snapshot_date,period,objectives_avg_progress,objectives_total,objectives_on_track,objectives_at_risk,objectives_off_track,objectives_achieved",
+    )
+    .eq("period", period)
+    .order("snapshot_date", { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return ((data ?? []) as OkrSnapshot[]).slice().reverse();
+}
+
+export async function takeOkrSnapshot(period: string): Promise<void> {
+  const { error } = await (supabase as any).rpc("take_okr_snapshot", { p_period: period });
+  if (error) throw error;
+}
+
+/* ---------------------------------------------------------------------------
+ * Uang anggota yang masih nyangkut (reimbursement belum diganti)
+ * ------------------------------------------------------------------------- */
+
+export type StuckMoney = {
+  total: number;
+  peopleCount: number;
+  oldestDays: number;
+  rows: {
+    id: string | null;
+    purpose: string | null;
+    requester_name: string | null;
+    amount_idr: number | null;
+    days_outstanding: number | null;
+    status: string | null;
+  }[];
+};
+
+export async function fetchStuckMoney(): Promise<StuckMoney> {
+  const { data, error } = await db
+    .from("reimbursement_aging")
+    .select("id,purpose,requester_id,requester_name,amount_idr,days_outstanding,status")
+    .order("days_outstanding", { ascending: false });
+  if (error) throw error;
+  const rows = (data ?? []) as any[];
+  const pending = rows.filter((r) => r.status !== "Disbursed" && r.status !== "Rejected");
+  return {
+    total: pending.reduce((s, r) => s + Number(r.amount_idr ?? 0), 0),
+    peopleCount: new Set(pending.map((r) => r.requester_id)).size,
+    oldestDays: pending.reduce((m, r) => Math.max(m, Number(r.days_outstanding ?? 0)), 0),
+    rows: pending.slice(0, 5),
+  };
+}
+
+/* ---------------------------------------------------------------------------
+ * Rata-rata kehadiran rapat per divisi
+ * ------------------------------------------------------------------------- */
+
+export async function fetchAttendanceByDivision(): Promise<Record<string, number>> {
+  const [attendance, profiles] = await Promise.all([
+    db.from("meeting_attendance").select("member_id,status"),
+    db.from("profiles").select("id,division"),
+  ]);
+  if (attendance.error) throw attendance.error;
+  if (profiles.error) throw profiles.error;
+
+  const divisionOf = new Map<string, string | null>(
+    ((profiles.data ?? []) as any[]).map((p) => [p.id as string, p.division as string | null]),
+  );
+  const tally = new Map<string, { present: number; total: number }>();
+  for (const row of (attendance.data ?? []) as any[]) {
+    const division = divisionOf.get(row.member_id) ?? null;
+    if (!division) continue;
+    const cur = tally.get(division) ?? { present: 0, total: 0 };
+    cur.total += 1;
+    if (row.status === "Hadir") cur.present += 1;
+    tally.set(division, cur);
+  }
+  const result: Record<string, number> = {};
+  for (const [division, v] of tally) {
+    result[division] = v.total === 0 ? 0 : Math.round((v.present / v.total) * 100);
+  }
+  return result;
+}
