@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as RegisterRouteImport } from './routes/register'
 import { Route as AuthenticatedAnnouncementsRouteImport } from './routes/_authenticated/announcements'
+import { Route as AuthenticatedBudgetsRouteImport } from './routes/_authenticated/budgets'
 import { Route as AuthenticatedCalendarRouteImport } from './routes/_authenticated/calendar'
 import { Route as AuthenticatedCommandCenterRouteImport } from './routes/_authenticated/command-center'
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
@@ -54,6 +55,11 @@ const AuthenticatedAnnouncementsRoute =
     path: '/announcements',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedBudgetsRoute = AuthenticatedBudgetsRouteImport.update({
+  id: '/budgets',
+  path: '/budgets',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedCalendarRoute = AuthenticatedCalendarRouteImport.update({
   id: '/calendar',
   path: '/calendar',
@@ -137,6 +143,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/announcements': typeof AuthenticatedAnnouncementsRoute
+  '/budgets': typeof AuthenticatedBudgetsRoute
   '/calendar': typeof AuthenticatedCalendarRoute
   '/command-center': typeof AuthenticatedCommandCenterRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -157,6 +164,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/announcements': typeof AuthenticatedAnnouncementsRoute
+  '/budgets': typeof AuthenticatedBudgetsRoute
   '/calendar': typeof AuthenticatedCalendarRoute
   '/command-center': typeof AuthenticatedCommandCenterRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -179,6 +187,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/_authenticated/announcements': typeof AuthenticatedAnnouncementsRoute
+  '/_authenticated/budgets': typeof AuthenticatedBudgetsRoute
   '/_authenticated/calendar': typeof AuthenticatedCalendarRoute
   '/_authenticated/command-center': typeof AuthenticatedCommandCenterRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
@@ -201,6 +210,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/announcements'
+    | '/budgets'
     | '/calendar'
     | '/command-center'
     | '/dashboard'
@@ -221,6 +231,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/announcements'
+    | '/budgets'
     | '/calendar'
     | '/command-center'
     | '/dashboard'
@@ -242,6 +253,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/_authenticated/announcements'
+    | '/_authenticated/budgets'
     | '/_authenticated/calendar'
     | '/_authenticated/command-center'
     | '/_authenticated/dashboard'
@@ -300,6 +312,13 @@ declare module '@tanstack/react-router' {
       path: '/announcements'
       fullPath: '/announcements'
       preLoaderRoute: typeof AuthenticatedAnnouncementsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/budgets': {
+      id: '/_authenticated/budgets'
+      path: '/budgets'
+      fullPath: '/budgets'
+      preLoaderRoute: typeof AuthenticatedBudgetsRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/calendar': {
@@ -405,6 +424,7 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedAnnouncementsRoute: typeof AuthenticatedAnnouncementsRoute
+  AuthenticatedBudgetsRoute: typeof AuthenticatedBudgetsRoute
   AuthenticatedCalendarRoute: typeof AuthenticatedCalendarRoute
   AuthenticatedCommandCenterRoute: typeof AuthenticatedCommandCenterRoute
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
@@ -423,6 +443,7 @@ interface AuthenticatedRouteRouteChildren {
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAnnouncementsRoute: AuthenticatedAnnouncementsRoute,
+  AuthenticatedBudgetsRoute: AuthenticatedBudgetsRoute,
   AuthenticatedCalendarRoute: AuthenticatedCalendarRoute,
   AuthenticatedCommandCenterRoute: AuthenticatedCommandCenterRoute,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,

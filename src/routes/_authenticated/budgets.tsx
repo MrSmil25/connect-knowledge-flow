@@ -202,7 +202,7 @@ function BudgetsPage() {
           {tree.map((node) => {
             const spentParent = Number(node.spent_idr ?? 0) + node.spentChildren;
             const progress = budgetProgress(spentParent, Number(node.allocated_idr ?? 0));
-            const statusMeta = BUDGET_STATUS_META[node.status] ?? BUDGET_STATUS_META.On_Budget;
+            const statusMeta = BUDGET_STATUS_META[node.status] ?? BUDGET_STATUS_META["On_Budget"]!;
             const open = expanded[node.id] ?? true;
             const canSub = canManageSubBudget(role, myDivision, node.division);
 
@@ -269,7 +269,7 @@ function BudgetsPage() {
                     <StatBlock
                       label="Terpakai"
                       value={formatRupiah(spentParent)}
-                      tone={progress >= 100 ? "text-red-700" : undefined}
+                      tone={progress >= 100 ? "text-red-700" : ""}
                     />
                   </div>
                   <Progress value={progress} />
