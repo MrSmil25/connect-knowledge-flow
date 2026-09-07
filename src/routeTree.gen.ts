@@ -25,6 +25,7 @@ import { Route as AuthenticatedWorkspaceRouteImport } from './routes/_authentica
 import { Route as AuthenticatedFundRequestsIndexRouteImport } from './routes/_authenticated/fund-requests.index'
 import { Route as AuthenticatedFundRequestsIdRouteImport } from './routes/_authenticated/fund-requests.$id'
 import { Route as AuthenticatedMeetingsIndexRouteImport } from './routes/_authenticated/meetings.index'
+import { Route as AuthenticatedMeetingsIdRouteImport } from './routes/_authenticated/meetings.$id'
 import { Route as AuthenticatedSettingsOrganizationRouteImport } from './routes/_authenticated/settings.organization'
 
 const IndexRoute = IndexRouteImport.update({
@@ -113,6 +114,11 @@ const AuthenticatedMeetingsIndexRoute =
     path: '/meetings/',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedMeetingsIdRoute = AuthenticatedMeetingsIdRouteImport.update({
+  id: '/meetings/$id',
+  path: '/meetings/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedSettingsOrganizationRoute =
   AuthenticatedSettingsOrganizationRouteImport.update({
     id: '/settings/organization',
@@ -134,6 +140,7 @@ export interface FileRoutesByFullPath {
   '/profile': typeof AuthenticatedProfileRoute
   '/workspace': typeof AuthenticatedWorkspaceRoute
   '/fund-requests/$id': typeof AuthenticatedFundRequestsIdRoute
+  '/meetings/$id': typeof AuthenticatedMeetingsIdRoute
   '/settings/organization': typeof AuthenticatedSettingsOrganizationRoute
   '/fund-requests/': typeof AuthenticatedFundRequestsIndexRoute
   '/meetings/': typeof AuthenticatedMeetingsIndexRoute
@@ -152,6 +159,7 @@ export interface FileRoutesByTo {
   '/profile': typeof AuthenticatedProfileRoute
   '/workspace': typeof AuthenticatedWorkspaceRoute
   '/fund-requests/$id': typeof AuthenticatedFundRequestsIdRoute
+  '/meetings/$id': typeof AuthenticatedMeetingsIdRoute
   '/settings/organization': typeof AuthenticatedSettingsOrganizationRoute
   '/fund-requests': typeof AuthenticatedFundRequestsIndexRoute
   '/meetings': typeof AuthenticatedMeetingsIndexRoute
@@ -172,6 +180,7 @@ export interface FileRoutesById {
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/workspace': typeof AuthenticatedWorkspaceRoute
   '/_authenticated/fund-requests/$id': typeof AuthenticatedFundRequestsIdRoute
+  '/_authenticated/meetings/$id': typeof AuthenticatedMeetingsIdRoute
   '/_authenticated/settings/organization': typeof AuthenticatedSettingsOrganizationRoute
   '/_authenticated/fund-requests/': typeof AuthenticatedFundRequestsIndexRoute
   '/_authenticated/meetings/': typeof AuthenticatedMeetingsIndexRoute
@@ -192,6 +201,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/workspace'
     | '/fund-requests/$id'
+    | '/meetings/$id'
     | '/settings/organization'
     | '/fund-requests/'
     | '/meetings/'
@@ -210,6 +220,7 @@ export interface FileRouteTypes {
     | '/profile'
     | '/workspace'
     | '/fund-requests/$id'
+    | '/meetings/$id'
     | '/settings/organization'
     | '/fund-requests'
     | '/meetings'
@@ -229,6 +240,7 @@ export interface FileRouteTypes {
     | '/_authenticated/profile'
     | '/_authenticated/workspace'
     | '/_authenticated/fund-requests/$id'
+    | '/_authenticated/meetings/$id'
     | '/_authenticated/settings/organization'
     | '/_authenticated/fund-requests/'
     | '/_authenticated/meetings/'
@@ -355,6 +367,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMeetingsIndexRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/meetings/$id': {
+      id: '/_authenticated/meetings/$id'
+      path: '/meetings/$id'
+      fullPath: '/meetings/$id'
+      preLoaderRoute: typeof AuthenticatedMeetingsIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/settings/organization': {
       id: '/_authenticated/settings/organization'
       path: '/settings/organization'
@@ -376,6 +395,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedWorkspaceRoute: typeof AuthenticatedWorkspaceRoute
   AuthenticatedFundRequestsIdRoute: typeof AuthenticatedFundRequestsIdRoute
+  AuthenticatedMeetingsIdRoute: typeof AuthenticatedMeetingsIdRoute
   AuthenticatedSettingsOrganizationRoute: typeof AuthenticatedSettingsOrganizationRoute
   AuthenticatedFundRequestsIndexRoute: typeof AuthenticatedFundRequestsIndexRoute
   AuthenticatedMeetingsIndexRoute: typeof AuthenticatedMeetingsIndexRoute
@@ -392,6 +412,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedWorkspaceRoute: AuthenticatedWorkspaceRoute,
   AuthenticatedFundRequestsIdRoute: AuthenticatedFundRequestsIdRoute,
+  AuthenticatedMeetingsIdRoute: AuthenticatedMeetingsIdRoute,
   AuthenticatedSettingsOrganizationRoute:
     AuthenticatedSettingsOrganizationRoute,
   AuthenticatedFundRequestsIndexRoute: AuthenticatedFundRequestsIndexRoute,

@@ -15,6 +15,7 @@ import {
   TrendingUp,
   Wallet,
   ShieldCheck,
+  NotebookPen,
 } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -63,6 +64,7 @@ const navSections = [
       { to: "/profile", label: "Profil Saya", icon: User },
       { to: "/members", label: "Anggota", icon: Users },
       { to: "/divisions", label: "Divisi", icon: Boxes },
+      { to: "/meetings", label: "Rapat", icon: NotebookPen },
     ] as const,
   },
 ] as const;
