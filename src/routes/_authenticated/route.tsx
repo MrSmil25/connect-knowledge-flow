@@ -16,6 +16,7 @@ import {
   Wallet,
   ShieldCheck,
   NotebookPen,
+  CalendarDays,
 } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -41,6 +42,7 @@ const navSections = [
     items: [
       { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
       { to: "/workspace", label: "Ruang Kerja Saya", icon: BriefcaseBusiness },
+      { to: "/calendar", label: "Kalender", icon: CalendarDays },
     ] as const,
   },
   {
