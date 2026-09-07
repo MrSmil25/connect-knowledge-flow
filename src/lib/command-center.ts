@@ -166,7 +166,7 @@ export async function fetchRedFlags(period: string) {
   const ago14 = new Date(today.getTime() - 14 * 86_400_000);
   const ago7 = new Date(today.getTime() - 7 * 86_400_000);
 
-  const [okr, tasks, deals, budgets, mous, fundRequests, events] = await Promise.all([
+  const [okr, tasks, deals, budgets, mous, fundRequests, reimbursements, events] = await Promise.all([
     fetchOkr(period),
     fetchTasks(),
     db
@@ -190,6 +190,10 @@ export async function fetchRedFlags(period: string) {
       .select("id,purpose,amount_idr,status,created_at,requester_division")
       .in("status", ["Submitted", "Under_Review"])
       .lt("created_at", ago7.toISOString()),
+    db
+      .from("reimbursement_aging")
+      .select("id,purpose,amount_idr,status,days_outstanding,requester_name,requester_division")
+      .gt("days_outstanding", 7),
     db
       .from("events")
       .select("id,name,date_start,status")
@@ -266,10 +270,10 @@ export async function fetchRedFlags(period: string) {
       id: `budget-${b.id}`,
       category: "Anggaran",
       title: `${b.category}${b.division ? ` (${b.division})` : ""}`,
-      description: `${b.status === "Over_Budget" ? "Melebihi anggaran" : "Mendekati batas"} · alokasi ${b.allocated_idr} vs terpakai ${b.spent_idr ?? 0}`,
+      description: `${b.status === "Over_Budget" ? "Melebihi anggaran" : "Mendekati batas"} · alokasi Rp ${Number(b.allocated_idr ?? 0).toLocaleString("id-ID")} vs terpakai Rp ${Number(b.spent_idr ?? 0).toLocaleString("id-ID")}`,
       urgency: b.status === "Over_Budget" ? 95 : 70,
       division: b.division,
-      link: { to: "/dashboard" },
+      link: { to: "/budgets" },
     });
   }
 
@@ -294,7 +298,22 @@ export async function fetchRedFlags(period: string) {
       description: `Status ${f.status} · menunggu ${waiting} hari`,
       urgency: 55 + Math.min(waiting, 30),
       division: f.requester_division,
-      link: { to: "/dashboard" },
+      link: { to: "/fund-approvals" },
+    });
+  }
+
+  for (const r of (reimbursements.data ?? []) as any[]) {
+    if (r.status === "Disbursed" || r.status === "Rejected") continue;
+    flags.push({
+      id: `reimburse-${r.id}`,
+      category: "Reimbursement",
+      title: r.purpose ?? "Reimbursement",
+      description: `${r.requester_name ?? "Anggota"} menalangi ${Number(
+        r.amount_idr ?? 0,
+      ).toLocaleString("id-ID")} · belum diganti ${r.days_outstanding ?? 0} hari (status ${r.status})`,
+      urgency: 65 + Math.min(Number(r.days_outstanding ?? 0), 35),
+      division: r.requester_division,
+      link: { to: "/fund-approvals" },
     });
   }
 
@@ -560,7 +579,7 @@ export async function fetchAttendanceByDivision(): Promise<Record<string, number
     if (!division) continue;
     const cur = tally.get(division) ?? { present: 0, total: 0 };
     cur.total += 1;
-    if (row.status === "Hadir") cur.present += 1;
+    if (row.status === "Hadir" || row.status === "Terlambat") cur.present += 1;
     tally.set(division, cur);
   }
   const result: Record<string, number> = {};
