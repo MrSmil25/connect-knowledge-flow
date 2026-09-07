@@ -17,6 +17,7 @@ import {
   ShieldCheck,
   NotebookPen,
   CalendarDays,
+  PiggyBank,
 } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -51,7 +52,10 @@ const navSections = [
   },
   {
     label: "KEUANGAN",
-    items: [{ to: "/fund-requests", label: "Pengajuan Dana", icon: Wallet }] as const,
+    items: [
+      { to: "/fund-requests", label: "Pengajuan Dana", icon: Wallet },
+      { to: "/budgets", label: "Anggaran", icon: PiggyBank },
+    ] as const,
   },
   {
     label: "STRATEGI",
